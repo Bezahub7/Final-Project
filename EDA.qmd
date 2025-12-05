@@ -86,9 +86,7 @@ head(diabetes)
 # define the labels for those with large number of distinct levels as a character vector
 age_labels <- c("18-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54",
                   "55-59", "60-64", "65-69", "70-74", "75-79","80-99")
-income_labels <- c("<$10,000", "<$15,000", "<$20,000", "<$25,000", "<$35,000",                        "<$50,000", "<$75,000",">=$75,000")
-  
-
+income_labels <- c("<$10,000", "<$15,000", "<$20,000", "<$25,000", "<$35,000",                           "<$50,000", "<$75,000",">=$75,000")
 diabetes1 <- diabetes |>
   #add label for all variables with the same label at once
   mutate(across(c(Smoker,Stroke,HeartDiseaseorAttack,PhysActivity,Fruits,Veggies
