@@ -205,6 +205,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Diabetes is a common chronic condition associated with substantial morbidity, mortality, and healthcare costs. Early identification of individuals at elevated risk can help target prevention and management efforts more efficiently. In this project, we work with a cross-sectional health survey dataset, in which the main outcome of interest is a binary indicator of diabetes status, Diabetes_binary` (1 = has diabetes, 0 = does not have diabetes).</p>
 <p>On this section, we will focus on creating model for predicting the ‘Diabetes_binary’ variable. We will use log-loss as our metric to evaluate the models and select the best model.</p>
 <p>Based on the exploratory data analysis, about 86% of the participants have no diabetes. That is, it in an imbalance data. Thus, I used stratified sampling to ensure that both sets have similar proportions of diabetes cases.</p>
+<p>For the model, I’ve selected seven key predictors based on clinical relevance and exploratory data analysis. These predictors are High BP, BMI, Physical Activity, Age group, General Health, Smoking status and Education.</p>
 <section id="task1-read-data" class="level2">
 <h2 class="anchored" data-anchor-id="task1-read-data">Task1: Read data</h2>
 <p>The cleaned data was already saved in the data folder of this project so, I’ll read it in.</p>
