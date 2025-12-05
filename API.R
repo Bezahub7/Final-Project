@@ -126,14 +126,14 @@ full_preds <- predict(final_wf, diabetes2, type = "class") %>%
 #* Query parameters:
 #*   HighBP, BMI, PhysActivity, Smoker, Age, Sex, Income, Education
 #*   
-#*
+#*37619
 #* @get /pred
 #*```` 
 #*Example Functions:
 #*
-#*http://127.0.0.1:37619/pred?HighBP=1&BMI=22&Age=9
-#*http://127.0.0.1:37619/pred?HighBP=1&PhysActivity=0&Smoker=1&GenHlth=5
-#*http://127.0.0.1:37619/pred?Education=6&PhysActivity=1&Smoker=0
+#*http://127.0.0.1:8000/pred?HighBP=1&BMI=22&Age=9
+#*http://127.0.0.1:8000/pred?HighBP=1&PhysActivity=0&Smoker=1&GenHlth=5
+#*http://127.0.0.1:8000/pred?Education=6&PhysActivity=1&Smoker=0
 #*````
 function(req, res) {
   
