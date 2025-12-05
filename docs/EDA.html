@@ -305,45 +305,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># define the labels for those with large number of distinct levels as a character vector</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>age_labels <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"18-24"</span>, <span class="st">"25-29"</span>, <span class="st">"30-34"</span>, <span class="st">"35-39"</span>, <span class="st">"40-44"</span>, <span class="st">"45-49"</span>, <span class="st">"50-54"</span>,</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"55-59"</span>, <span class="st">"60-64"</span>, <span class="st">"65-69"</span>, <span class="st">"70-74"</span>, <span class="st">"75-79"</span>,<span class="st">"80-99"</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>income_labels <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"&lt;$10,000"</span>, <span class="st">"&lt;$15,000"</span>, <span class="st">"&lt;$20,000"</span>, <span class="st">"&lt;$25,000"</span>, <span class="st">"&lt;$35,000"</span>,                        <span class="st">"&lt;$50,000"</span>, <span class="st">"&lt;$75,000"</span>,<span class="st">"&gt;=$75,000"</span>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>diabetes1 <span class="ot">&lt;-</span> diabetes <span class="sc">|&gt;</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#add label for all variables with the same label at once</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(Smoker,Stroke,HeartDiseaseorAttack,PhysActivity,Fruits,Veggies</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                  ,HvyAlcoholConsump,AnyHealthcare,NoDocbcCost,DiffWalk),</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                <span class="sc">~</span><span class="fu">factor</span>(.x,<span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>),</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>                        <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No"</span>,<span class="st">"Yes"</span>))))<span class="sc">|&gt;</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">Diabetes_binary =</span> <span class="fu">factor</span>(Diabetes_binary,</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No diabetes"</span>, <span class="st">"Diabetes"</span>)),</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">HighBP =</span> <span class="fu">factor</span>(HighBP,</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No high BP"</span>, <span class="st">"High BP"</span>)),</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">HighChol =</span> <span class="fu">factor</span>(HighChol,</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No high cholestrol"</span>, <span class="st">"High cholestrol"</span>)),</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">CholCheck =</span> <span class="fu">factor</span>(CholCheck,</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No cholestrol Check in 5 yrs"</span>,                                                     <span class="st">"Cholestrol checked in 5 yrs"</span>)),</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">GenHlth =</span> <span class="fu">factor</span>(GenHlth,</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>), </span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>          <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Excellent"</span>,<span class="st">"Very good"</span>,<span class="st">"Good"</span>,<span class="st">"Fair"</span>,<span class="st">"Poor"</span>)),</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">Sex =</span> <span class="fu">factor</span>(Sex,</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Female"</span>,<span class="st">"Male"</span>)),</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">Education =</span> <span class="fu">factor</span>(Education,</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Unschooled"</span>,</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"Grades 1-8"</span>,</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"Grades 9-11"</span>,</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"Grade 12 or GED"</span>,        </span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"Some College"</span>,</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"College Grad"</span>)),</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">|&gt;</span></span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> (<span class="at">Age_group=</span><span class="fu">factor</span>(Age,<span class="at">labels =</span> age_labels),</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>          <span class="at">.keep=</span><span class="st">"unused"</span>)<span class="sc">|&gt;</span></span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Income_group=</span><span class="fu">factor</span>(Income,<span class="at">labels =</span> income_labels),</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>         <span class="at">.keep=</span><span class="st">"unused"</span>)</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(diabetes1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>income_labels <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"&lt;$10,000"</span>, <span class="st">"&lt;$15,000"</span>, <span class="st">"&lt;$20,000"</span>, <span class="st">"&lt;$25,000"</span>, <span class="st">"&lt;$35,000"</span>,                           <span class="st">"&lt;$50,000"</span>, <span class="st">"&lt;$75,000"</span>,<span class="st">"&gt;=$75,000"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>diabetes1 <span class="ot">&lt;-</span> diabetes <span class="sc">|&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#add label for all variables with the same label at once</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(Smoker,Stroke,HeartDiseaseorAttack,PhysActivity,Fruits,Veggies</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                  ,HvyAlcoholConsump,AnyHealthcare,NoDocbcCost,DiffWalk),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                <span class="sc">~</span><span class="fu">factor</span>(.x,<span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                        <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No"</span>,<span class="st">"Yes"</span>))))<span class="sc">|&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">Diabetes_binary =</span> <span class="fu">factor</span>(Diabetes_binary,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No diabetes"</span>, <span class="st">"Diabetes"</span>)),</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">HighBP =</span> <span class="fu">factor</span>(HighBP,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No high BP"</span>, <span class="st">"High BP"</span>)),</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">HighChol =</span> <span class="fu">factor</span>(HighChol,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No high cholestrol"</span>, <span class="st">"High cholestrol"</span>)),</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">CholCheck =</span> <span class="fu">factor</span>(CholCheck,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No cholestrol Check in 5 yrs"</span>,                                                     <span class="st">"Cholestrol checked in 5 yrs"</span>)),</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">GenHlth =</span> <span class="fu">factor</span>(GenHlth,</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>), </span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>          <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Excellent"</span>,<span class="st">"Very good"</span>,<span class="st">"Good"</span>,<span class="st">"Fair"</span>,<span class="st">"Poor"</span>)),</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">Sex =</span> <span class="fu">factor</span>(Sex,</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Female"</span>,<span class="st">"Male"</span>)),</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">Education =</span> <span class="fu">factor</span>(Education,</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Unschooled"</span>,</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"Grades 1-8"</span>,</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"Grades 9-11"</span>,</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"Grade 12 or GED"</span>,        </span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"Some College"</span>,</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">"College Grad"</span>)),</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">|&gt;</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> (<span class="at">Age_group=</span><span class="fu">factor</span>(Age,<span class="at">labels =</span> age_labels),</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>          <span class="at">.keep=</span><span class="st">"unused"</span>)<span class="sc">|&gt;</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Income_group=</span><span class="fu">factor</span>(Income,<span class="at">labels =</span> income_labels),</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>         <span class="at">.keep=</span><span class="st">"unused"</span>)</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(diabetes1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Diabetes_binary     HighBP           HighChol                    CholCheck
 1     No diabetes    High BP    High cholestrol  Cholestrol checked in 5 yrs
@@ -459,6 +457,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 # ℹ 52 more rows</code></pre>
 </div>
 </div>
+<p>From the above table, we can see that majority of our survey respondents are ages 50 and above and around 56% are female. Around 42% are college graduates. Around 43% reported having a history of high BP.</p>
 </section>
 <section id="two-way-contingency-tables" class="level4">
 <h4 class="anchored" data-anchor-id="two-way-contingency-tables">Two way contingency tables</h4>
@@ -473,7 +472,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   Diabetes    0.05147824 0.08785478</code></pre>
 </div>
 </div>
-<p>From the table we can see that 26604 participant have both Diabetes and High BP. And 66.8% of the participants who exercise don’t have Diabetes.</p>
+<p>From the table we can see 66.8% of the participants who exercise don’t have Diabetes.which can indicate that physical activity can be a good predictor for our model.</p>
 </section>
 <section id="three-way-contingency-tables" class="level4">
 <h4 class="anchored" data-anchor-id="three-way-contingency-tables">Three way contingency tables</h4>
@@ -618,6 +617,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </div>
 </div>
+<p>From the table, we can see that the mean BMI is around 28.3 which is classified as “Over weight” according to WHO, though the standard deviation is pretty wide here. The average days for poor mental and physical health is 3.18 and 4.24 respectively this can indicate our respondents are in relatively stable mental and physical health condition.Note that the standard deviations are pretty high here as well which indicates some people experience many more poor physical and metal health days.</p>
 </section>
 <section id="explore-the-outcome-diabetes_binary" class="level3">
 <h3 class="anchored" data-anchor-id="explore-the-outcome-diabetes_binary">Explore the Outcome: Diabetes_binary</h3>
@@ -674,6 +674,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 4 Diabetes        High BP     26604 0.244 </code></pre>
 </div>
 </div>
+<p>Among the 35,346 respondents with Diabetes 26604(75.3%) reported to have high BP indicating a positive relationship between Diabetes and high BP.</p>
 </section>
 <section id="plot-diabetes_binary-vs-highbp" class="level5">
 <h5 class="anchored" data-anchor-id="plot-diabetes_binary-vs-highbp">Plot: Diabetes_binary vs HighBP</h5>

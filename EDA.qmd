@@ -250,6 +250,8 @@ diabetes1 |>
   dplyr::mutate(prop = n/sum(n))
 
 ```
+Among the 35,346 respondents with Diabetes 26604(75.3%) reported to have high BP indicating a positive relationship between Diabetes and high BP.
+
 
 ##### Plot: Diabetes_binary vs HighBP
 
