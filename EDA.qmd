@@ -39,7 +39,6 @@ The dataset includes a mix of demographic, behavioral, and health-related predic
 -   **Cardiometabolic risk factors**
     -   `HighBP`: history of high blood pressure\
     -   `HighChol`: history of high cholesterol\
-    -   `CholCheck`: indicator of having had a recent cholesterol check\
     -   `BMI`: body mass index
 -   **Health behaviors and lifestyle**
     -   `Smoker`: history of cigarette smoking\
@@ -50,11 +49,10 @@ The dataset includes a mix of demographic, behavioral, and health-related predic
     -   `Stroke`: history of stroke\
     -   `HeartDiseaseorAttack`: history of coronary heart disease or MI\
     -   `AnyHealthcare`: any form of health coverage\
-    -   `NoDocbcCost`: could not see a doctor because of cost\
     -   `GenHlth`: self-rated general health\
     -   `MentHlth`: number of days of poor mental health\
     -   `PhysHlth`: number of days of poor physical health\
-    -   `DiffWalk`: difficulty walking or climbing stairs
+
 -   **Sociodemographic characteristics**
     -   `Sex`\
     -   `Age` (coded in ordered age categories)\

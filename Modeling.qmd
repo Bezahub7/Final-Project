@@ -36,6 +36,8 @@ On this section, we will focus on creating model for predicting the 'Diabetes_bi
 
 Based on the exploratory data analysis, about 86% of the participants have no diabetes. That is, it in an imbalance data. Thus, I used stratified sampling to ensure that both sets have similar proportions of diabetes cases.
 
+For the model, I've selected seven key predictors based on clinical relevance and exploratory data analysis. These predictors are High BP, BMI, Physical Activity, Age group, General Health, Smoking status and Education.
+
 ## Task1: Read data
 
 The cleaned data was already saved in the data folder of this project so, I'll read it in.
