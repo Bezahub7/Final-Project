@@ -134,8 +134,6 @@ saveRDS(diabetes_final,"data/diabetes_final.rds")
 
 ```
 
-
-
 ```{r}
 # Count total missing per variable
 diabetes1 |> dplyr::summarize(across(everything(), ~ sum(is.na(.))))
@@ -178,6 +176,9 @@ factor_summary <-diabetes1|>
 factor_summary
 ```
 
+From the above table, we can see that majority of our survey respondents are ages 50 and above and around 56% are female. Around 42% are college graduates. Around 43% reported having a history of high BP.
+
+
 #### Two way contingency tables
 
 ```{r}
@@ -187,7 +188,7 @@ factor_summary
 prop.table(table(diabetes1$Diabetes_binary,diabetes1$PhysActivity))
 ```
 
-From the table we can see that 26604 participant have both Diabetes and High BP. And 66.8% of the participants who exercise don't have Diabetes.
+From the table we can see 66.8% of the participants who exercise don't have Diabetes.which can indicate that physical activity can be a good predictor for our model.
 
 #### Three way contingency tables
 
@@ -208,6 +209,9 @@ num_summry <- diabetes1 |>
   skim()
 num_summry
 ```
+
+From the table, we can see that the mean BMI is around 28.3 which is classified as "Over weight" according to WHO, though the standard deviation is pretty wide here. 
+The average days for poor mental and physical health is 3.18 and 4.24 respectively this can indicate our respondents are in relatively stable mental and physical health condition.Note that the standard deviations are pretty high here as well which indicates some people experience many more poor physical and metal health days.
 
 ### Explore the Outcome: Diabetes_binary
 
