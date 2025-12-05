@@ -1,0 +1,318 @@
+---
+title: "ST-558 Final Project"
+subtitle:  "**EDA: Explaratory Data Analysis**" 
+format: html
+editor: visual
+toc: true
+toc-depth: 5
+---
+
+```{r message=FALSE, warning=FALSE}
+#Load libraries
+library(tidyverse)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(skimr)
+library(purrr)
+library(gt)
+library(janitor)
+library(dplyr)
+library(stringr)
+library(reshape2)
+library(lubridate)
+library(skimr)
+library(tidymodels)
+library(doParallel)
+```
+
+# Introduction:
+
+Exploratory Data Analysis of Diabetes Risk Factors
+
+Diabetes is a common chronic condition associated with substantial morbidity, mortality, and healthcare costs. Early identification of individuals at elevated risk can help target prevention and management efforts more efficiently. In this project, we work with a cross-sectional health survey dataset, in which the main outcome of interest is a binary indicator of diabetes status, Diabetes_binary\` (1 = has diabetes, 0 = does not have diabetes).
+
+The dataset includes a mix of demographic, behavioral, and health-related predictors that may be associated with diabetes. In this analysis, we focus on the following variables:
+
+-   **Cardiometabolic risk factors**
+    -   `HighBP`: history of high blood pressure\
+    -   `HighChol`: history of high cholesterol\
+    -   `CholCheck`: indicator of having had a recent cholesterol check\
+    -   `BMI`: body mass index
+-   **Health behaviors and lifestyle**
+    -   `Smoker`: history of cigarette smoking\
+    -   `HvyAlcoholConsump`: heavy alcohol consumption\
+    -   `PhysActivity`: engagement in recent physical activity\
+    -   `Fruits`, `Veggies`: regular consumption of fruits and vegetables
+-   **Health status and healthcare access**
+    -   `Stroke`: history of stroke\
+    -   `HeartDiseaseorAttack`: history of coronary heart disease or MI\
+    -   `AnyHealthcare`: any form of health coverage\
+    -   `NoDocbcCost`: could not see a doctor because of cost\
+    -   `GenHlth`: self-rated general health\
+    -   `MentHlth`: number of days of poor mental health\
+    -   `PhysHlth`: number of days of poor physical health\
+    -   `DiffWalk`: difficulty walking or climbing stairs
+-   **Sociodemographic characteristics**
+    -   `Sex`\
+    -   `Age` (coded in ordered age categories)\
+    -   `Education` (education level categories)\
+    -   `Income` (household income categories)
+
+The **goal of this exploratory data analysis (EDA)** is to:
+
+1.  Describe the distribution of the outcome `Diabetes_binary` and key predictors listed above.\
+2.  Visualize and summarize relationships between diabetes status and important risk factors (e.g., BMI, high blood pressure, physical activity, and socio-demographic variables).\
+3.  Identify potential issues that could affect modeling, such as missing data, outliers, skewed distributions, and highly imbalanced categories.\
+4.  Generate initial insights that will inform the choice of an appropriate predictive modeling strategy.
+
+Ultimately, our objective is to use these predictors to build a **predictive model** for `Diabetes_binary`. In a separate modeling vignette, we will use the tidymodels framework with a training/test split to fit and compare candidate models, select a “best” model based on predictive performance, and then deploy that model as an API inside a Docker container. The current EDA vignette lays the foundation for those steps by providing a clear understanding of the data and the relationships we aim to capture in the model.
+
+## Task 1:Read in the dataset
+
+```{r}
+#Read in the dataset
+
+diabetes <- read.csv("data/diabetes_binary_health_indicators_BRFSS2015.csv")
+head(diabetes)
+```
+
+## Task 2:Data Cleaning and Preparation
+
+```{r}
+# convert integer variables into factors
+# define the labels for those with large number of distinct levels as a character vector
+age_labels <- c("18-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54",
+                  "55-59", "60-64", "65-69", "70-74", "75-79","80-99")
+income_labels <- c("<$10,000", "<$15,000", "<$20,000", "<$25,000", "<$35,000",                        "<$50,000", "<$75,000",">=$75,000")
+  
+
+diabetes1 <- diabetes |>
+  #add label for all variables with the same label at once
+  mutate(across(c(Smoker,Stroke,HeartDiseaseorAttack,PhysActivity,Fruits,Veggies
+                  ,HvyAlcoholConsump,AnyHealthcare,NoDocbcCost,DiffWalk),
+                ~factor(.x,levels = c(0,1),
+                        labels = c("No","Yes"))))|>
+  mutate(
+    Diabetes_binary = factor(Diabetes_binary,
+          levels = c(0,1), labels = c("No diabetes", "Diabetes")),
+    HighBP = factor(HighBP,
+          levels = c(0,1), labels = c("No high BP", "High BP")),
+    HighChol = factor(HighChol,
+          levels = c(0,1), labels = c("No high cholestrol", "High cholestrol")),
+    CholCheck = factor(CholCheck,
+          levels = c(0,1), labels = c("No cholestrol Check in 5 yrs",                                                     "Cholestrol checked in 5 yrs")),
+    GenHlth = factor(GenHlth,
+          levels = c(1,2,3,4,5), 
+          labels = c("Excellent","Very good","Good","Fair","Poor")),
+    Sex = factor(Sex,
+          levels = c(0,1), labels = c("Female","Male")),
+    Education = factor(Education,
+      levels = c(1,2,3,4,5,6), labels = c("Unschooled",
+                                          "Grades 1-8",
+                                          "Grades 9-11",
+                                          "Grade 12 or GED",        
+                                          "Some College",
+                                          "College Grad")),
+    
+  )|>
+  mutate (Age_group=factor(Age,labels = age_labels),
+          .keep="unused")|>
+
+  mutate(Income_group=factor(Income,labels = income_labels),
+         .keep="unused")
+
+head(diabetes1)
+
+colnames(diabetes1)
+
+#save the data as.RDS file to access it in the modeling.qmd
+
+diabetes_final <- diabetes1
+saveRDS(diabetes_final,"data/diabetes_final.rds")
+
+
+```
+
+
+
+```{r}
+# Count total missing per variable
+diabetes1 |> dplyr::summarize(across(everything(), ~ sum(is.na(.))))
+
+# Visual proportion
+missing_summary <- diabetes1 |> 
+  dplyr::summarize(across(everything(), ~ mean(is.na(.)))) |> 
+  pivot_longer(everything(), names_to = "variable", values_to = "missing_prop")
+
+ggplot(missing_summary, aes(x = reorder(variable, -missing_prop), y = missing_prop)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Proportion of Missing Data by Variable",
+       x = "Variable", y = "Missing Proportion") +
+  theme_minimal()
+
+```
+
+Before performing any modeling, it is important to evaluate the extent of missingness in the dataset. Across the 22 variables, the summary shows that missingness is absent for all variables.
+
+The bar plot of missing proportions confirms that no variable contains any missing data, meaning the dataset is generally complete and suitable for predictive modeling.
+
+## Task 3:Summary Statistics
+
+### Summary for Factor Variables
+
+
+#### One way contingency tables
+The following code gives frequency plus percent of each factor.
+
+```{r}
+factor_summary <-diabetes1|>
+  select(where(is.factor))|>
+  pivot_longer(everything(),names_to = "Variable", values_to = "Value")|>
+  group_by(Variable,Value)|>
+  summarise(Count=n(),.groups = "drop")|>
+  group_by(Variable)|>
+  mutate(Percent=round(100*Count/sum(Count),1))|>
+  ungroup()
+factor_summary
+```
+
+#### Two way contingency tables
+
+```{r}
+
+#with proportion
+
+prop.table(table(diabetes1$Diabetes_binary,diabetes1$PhysActivity))
+```
+
+From the table we can see that 26604 participant have both Diabetes and High BP. And 66.8% of the participants who exercise don't have Diabetes.
+
+#### Three way contingency tables
+
+```{r}
+table(diabetes1$Diabetes_binary,diabetes1$HighBP,diabetes1$Smoker)
+  
+```
+
+out of 141,257 non smokers, 12659(\~9% ) have diabetes and high BP out of 112,423 smokers, 13945(12.4%) have diabetes and high BP Even if the total number of smokers are relatively smaller, we have a higher percentage of people with both conditions (diabetes and high BP)
+
+### Summary for Numeric Variables
+
+The following code gives summary of the numeric varaibles. Numeric vars = BMI, MentHlth, PhysHlth
+
+```{r}
+num_summry <- diabetes1 |> 
+  select(BMI, MentHlth, PhysHlth) |> 
+  skim()
+num_summry
+```
+
+### Explore the Outcome: Diabetes_binary
+
+```{r}
+#table
+diabetes1 |> 
+  tabyl(Diabetes_binary) |> 
+  adorn_pct_formatting()
+```
+
+```{r}
+#plot
+ggplot(diabetes1, aes(x = Diabetes_binary)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Distribution of Diabetes Outcome", 
+       x = "Diabetes Status", 
+       y = "Count") +
+  theme_minimal()
+```
+
+The outcome variable Diabetes_binary is imbalanced, with the majority of respondents classified as non-diabetic (0). This imbalance is important to note, because predictive modeling methods may require tuning or evaluation metrics that account for imbalance (e.g., ROC-AUC rather than accuracy alone).
+
+### Bivariate Exploration: Predictors vs. Diabetes_binary
+
+Let's explore how predictors relate to Diabetes_binary.
+
+#### Diabetes_binary vs predictors
+
+##### Contigency table: Diabetes_binary vs HighBP
+
+```{r}
+#code
+diabetes1 |> 
+  dplyr::count(Diabetes_binary,HighBP) |> 
+  group_by(HighBP) |> 
+  dplyr::mutate(prop = n/sum(n))
+
+```
+
+##### Plot: Diabetes_binary vs HighBP
+
+visuals for Diabetes_binary vs some selected predictor variables.
+```{r}
+predictors <- c("HighBP", "Fruits", "Veggies", "PhysActivity", "Smoker", "HighChol", "Income_group", "Education", "Age_group")
+
+for (var in predictors) {
+  p <- ggplot(diabetes1, aes_string(x = var, fill = "Diabetes_binary")) +
+    geom_bar(position = "fill") +
+    labs(
+      title = paste("Proportion of Diabetes by", var),
+      x = var,
+      y = "Proportion"
+    ) +
+    scale_y_continuous(labels = scales::percent) +
+    theme_minimal()
+  
+  print(p)   
+}
+
+```
+
+The bivariate visualizations were created to examine how each predictor is associated with out come variable (diabetes). Several variables show strong separation. Individuals with a history of high blood pressure or high cholesterol have a higher proportion of diabetes. Lifestyle factors, such as physical activity and poor diet (low fruit/vegetable intake), also show noticeable differences in diabetes prevalence. For Socio-demographic variables such as age, income, and education we see that older adults and individuals with lower income or education levels tend to have higher diabetes rates.
+
+### Numeric predictors vs. Diabetes_binary
+
+#### Plot: BMI, Mental Health and Physical Health
+
+```{r}
+vars <- c("BMI", "MentHlth", "PhysHlth")
+var_labels <- c("BMI", "Mental Health", "Physical Health")
+
+for (i in seq_along(vars)) {
+  
+  v     <- vars[i]      # variable name
+  label <- var_labels[i]    # label for the y-axis/title
+  
+  p <- ggplot(diabetes1,
+              aes(x = .data[["Diabetes_binary"]],
+                  y = .data[[v]])) +
+    geom_boxplot(fill = "tan") +
+    labs(
+      title = paste(label, "Distribution by Diabetes Status"),
+      x = "Diabetes Status",
+      y = label
+    ) +
+    theme_minimal()
+  
+  print(p)   # show plot
+}
+```
+
+BMI differs markedly between individuals with and without diabetes, with diabetics showing higher median BMI. This aligns with known clinical risk patterns. Mental and physical health days show weaker or more variable separation, though diabetics tend to report more physically unhealthy days.
+
+### Correlations Among Numeric Variables
+
+```{r}
+diabetes1 |> 
+  select(BMI, MentHlth, PhysHlth) |> 
+  cor(use = "pairwise.complete.obs")
+```
+
+Among the numeric variables, mental health and physical health are some how correlated.
+
+Overall, the exploratory data analysis shows several strong relationships that are relevant for predictive modeling. Cardiometabolic variables such as high blood pressure and high cholesterol show clear associations with diabetes status. Lifestyle factors including physical activity and diet also demonstrate meaningful differences between diabetic and non-diabetic groups. Socio-demographic variables such as age, income, and education—indicate disparities that may inform model performance. The next step is to formally evaluate multiple models, compare their predictive performance, and select a final model to be deployed as an API.
+
+## [Click here for the Modeling Page](Modeling.html)

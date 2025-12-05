@@ -1,0 +1,370 @@
+---
+title: "Predictive Modeling"
+format: html
+editor: visual
+toc: true
+toc-depth: 5
+---
+```{r message=FALSE, warning=FALSE}
+#Load libraries
+library(tidyverse)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(skimr)
+library(purrr)
+library(gt)
+library(janitor)
+library(dplyr)
+library(stringr)
+library(reshape2)
+library(lubridate)
+library(skimr)
+library(tidymodels)
+library(doParallel)
+registerDoParallel()
+```
+
+
+# Introduction:
+
+Diabetes is a common chronic condition associated with substantial morbidity, mortality, and healthcare costs. Early identification of individuals at elevated risk can help target prevention and management efforts more efficiently. In this project, we work with a cross-sectional health survey dataset, in which the main outcome of interest is a binary indicator of diabetes status, Diabetes_binary\` (1 = has diabetes, 0 = does not have diabetes).
+
+On this section, we will focus on creating model for predicting the 'Diabetes_binary' variable. We will use log-loss as our metric to evaluate the models and select the best model.
+
+Based on the exploratory data analysis, about 86% of the participants have no diabetes. That is, it in an imbalance data. Thus, I used stratified sampling to ensure that both sets have similar proportions of diabetes cases.
+
+## Task1: Read data
+
+The cleaned data was already saved in the data folder of this project so, I'll read it in.
+
+```{r}
+diabetes_final<-readRDS("diabetes_final.rds")
+```
+
+
+## Task2: Split data
+
+
+Split the data into a training (70% of the data) and test set (30% of the data). Set a seed to make things reproducible.
+
+```{r}
+#Stratified sampling (This is used because the outcome is an imbalance outcome)
+set.seed(123)
+
+split <- initial_split(diabetes_final, prop = 0.7, strata = Diabetes_binary)
+
+train_data <- training(split)
+head(train_data)
+test_data  <- testing(split)
+head(test_data)
+
+```
+
+
+## Task3: Cross-validation set up (5-fold, stratified)
+
+Split into 5 folds, Each fold is used as a validation set once while the remaining 4 folds are used for training.
+
+```{r}
+set.seed(124)
+cv_folds <- vfold_cv(train_data, v = 5, strata = Diabetes_binary)
+cv_folds
+```
+##Task 4 Recipe: Basic recipe using all predictors.
+
+```{r}
+# since classification Tree and random forest models can take on factor variables, we didn't do the preprocessing for creating dummy variables.here, selected the predictors for the model.
+diabetes_recipe <- recipe(Diabetes_binary ~ HighBP + BMI + PhysActivity + Age_group + 
+                GenHlth + Smoker + Education, data = train_data) %>%
+  step_zv(all_predictors()) #to remove predictors with zero variance sd                                 they are not important in the modeling
+diabetes_recipe
+```
+
+## Task4:
+
+#### A.Classification Tree
+Classification Tree model is a type of supervised learning algorithm that is used to predict categorical outcome. So in our data, predicting whether participant has diabetes or not.It works by repeatedly splitting the data into smaller, more homogeneous groups.At each step, the algorithm selects the variable and cutoff that best separate the outcome categories—typically using metrics like Gini impurity or classification error. The result is a tree-like structure where each internal node represents a decision rule, each branch represents an outcome of that decision, and each terminal leaf represents a predicted class. Even though they are easy to interpret, single trees can be unstable, which means small changes in the data can produce different split.
+
+##### Model specification (with parameters to tune)
+
+We'll use tree depth and cost-complexity (cp) to optimize the model's performance .
+
+```{r}
+tree_model <- decision_tree(
+  cost_complexity = tune(),#pruning parameter
+  tree_depth = tune(),#how many levels from the root node to the final node
+  min_n = 5  # minimum number of samples to split a node
+) %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+tree_model
+```
+
+##### Grid of tuning parameters ( custom grid)
+
+create grid of possible values for the model on how much to prune and how deep to let it grow. we're providing R with Ranges are the smallest and largest values
+
+```{r}
+tree_grid <- grid_regular(
+  cost_complexity(range = c(-5, -1)), 
+  tree_depth(range = c(2, 10)),
+  levels = 5
+)
+tree_grid
+```
+
+
+##### Workflow for the tree
+
+Build a workflow to combine the pre-processed data with the model
+```{r}
+tree_wf <- workflow() %>%
+  add_model(tree_model) %>%
+  add_recipe(diabetes_recipe)
+tree_wf
+```
+
+##### Tuning using LOG-LOSS
+
+Here, we are trying all the model settings in the grid created, tests each one using cv, and finds the combination that gives the best performance.
+
+```{r cache=TRUE}
+# Set up parallel backend 
+cl <- makeCluster(parallel::detectCores() - 1)
+registerDoParallel(cl)
+
+# Control settings for tuning
+ctrl <- control_grid(
+  save_pred     = FALSE,
+  save_workflow = FALSE,
+  verbose       = FALSE,
+  allow_par     = TRUE
+)
+
+# Run tuning
+set.seed(112)
+tree_res <- tune_grid(
+  tree_wf,
+  resamples = cv_folds,
+  metrics   = metric_set(mn_log_loss),
+  grid      = tree_grid,   
+  control   = ctrl
+)
+
+# Stop cluster when done
+stopCluster(cl)
+registerDoSEQ()
+
+
+# collect metrics
+tree_metrics <- collect_metrics(tree_res)
+head(tree_metrics)
+```
+
+
+##### Select the best model
+
+this picks the best performing model from the tuning outputs.
+
+```{r}
+best_tree <- select_best(tree_res, metric = "mn_log_loss")
+best_tree
+```
+
+##### Final tree workflow
+
+Here we're updating the work flow  with the best performing hyperparameter values.
+
+```{r}
+final_tree_wf <- finalize_workflow(tree_wf, best_tree)
+final_tree_wf
+
+```
+
+#### B. Random Forest
+
+A random forest is an ensemble  method that builds many decision trees and combines their predictions to produce a more accurate and stable result. Each tree is trained on a bootstrapped sample, and at each split, the algorithm considers only a random subset of predictors. This randomness makes the trees more diverse, which helps the forest capture different patterns in the data.It also helps to decorrelates the trees which in turn reduce variance and improve accuracy.
+Random forests are powerful because they reduce the common weaknesses of single classification trees—especially overfitting and instability. By averaging or voting across many trees, the model becomes more robust and performs better on new, unseen data. 
+
+##### Random forest specification (with tuning)
+
+We'll tune on:
+mtry (number of  predictor variables sampled at each split)
+min_n (minimum observations required at a node)
+
+```{r}
+rf_model <- rand_forest(
+  mtry = tune(),
+  min_n = tune(),
+  trees = 100 
+) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("classification")
+
+```
+
+
+
+##### Random Forest Grid
+
+This creates 25 combination of mtry and min_n values for the model to test to find the best setting.
+
+```{r}
+rf_grid <- grid_regular(
+  mtry(range = c(2, 7)),
+  min_n(range = c(5, 50)),
+  levels = 5
+)
+
+```
+
+
+##### Random Forest Workflow
+Build a workflow to combine the pre-processed data with the model
+
+```{r}
+rf_wf <- workflow() %>%
+  add_model(rf_model) %>%
+  add_recipe(diabetes_recipe)
+```
+
+
+##### Tune with LOG-LOSS
+
+Here, we are trying all the model settings in the grid created, tests each one using cv, and finds the combination that gives the best performance.
+
+```{r cache=TRUE}
+cl   <- makeCluster(parallel::detectCores() - 1)
+registerDoParallel(cl)
+
+ctrl <- control_grid(
+  save_pred     = FALSE,
+  save_workflow = FALSE,
+  verbose       = FALSE,
+  allow_par     = TRUE
+)
+
+
+set.seed(129)
+rf_res <- tune_grid(
+  rf_wf,
+  resamples = cv_folds,
+  metrics   = metric_set(mn_log_loss),
+  grid      = rf_grid,
+  control   = ctrl
+)
+
+stopCluster(cl)
+registerDoSEQ()
+
+# collect metrics
+ref_metrics <- collect_metrics(rf_res)
+head(ref_metrics)
+```
+
+
+##### Select best random forest
+
+```{r}
+best_rf <- select_best(rf_res, metric = "mn_log_loss")
+best_rf
+```
+
+
+
+##### Final random forest workflow
+
+```{r}
+final_rf_wf <- finalize_workflow(rf_wf, best_rf)
+```
+
+
+#### C.Evaluate models on the test data
+
+##### Classification Tree 
+
+here, we're fitting the final classification tree model on the training dataset, predict probability of diabetes on the test data and calculate the log loss.
+
+```{r}
+tree_fit <- final_tree_wf %>% fit(data = train_data)
+tree_pred <- predict(tree_fit, test_data, type = "prob") %>%
+  bind_cols(test_data %>% select(Diabetes_binary))
+names(tree_pred)
+mn_log_loss(tree_pred, truth = Diabetes_binary, .pred_Diabetes)
+```
+
+##### Random Forest
+
+here, we're fitting the final random forest model on the training dataset, predict probability of diabetes on the test data and calculate the log loss.
+
+```{r}
+rf_fit <- final_rf_wf %>% fit(data = train_data)
+rf_pred <- predict(rf_fit, test_data, type = "prob") %>%
+  bind_cols(test_data %>% select(Diabetes_binary))
+
+mn_log_loss(rf_pred, truth = Diabetes_binary, .pred_Diabetes)
+```
+
+
+
+
+#### D. Generating Comparison Tables and Plots
+
+##### Comparison Table (Log-Loss on Test Set)
+
+```{r}
+# Compute log-loss for each model
+tree_logloss <- mn_log_loss(tree_pred, truth = Diabetes_binary, .pred_Diabetes)
+rf_logloss   <- mn_log_loss(rf_pred, truth = Diabetes_binary, .pred_Diabetes)
+
+comparison_table <- tibble(
+  Model = c("Decision Tree", "Random Forest"),
+  LogLoss = c(tree_logloss$.estimate, rf_logloss$.estimate)
+)
+
+comparison_table
+```
+
+
+##### Plot Tuning Results for Each Model
+
+###### Tree tuning plot
+
+Shows how changing depth & cost-complexity influenced log-loss.
+```{r}
+autoplot(tree_res) +
+  ggtitle("Classification Tree – Log-Loss Across Tuning Grid")
+```
+
+###### Random Forest tuning plot
+
+Shows effect of different mtry and min_n.
+```{r}
+autoplot(rf_res) +
+  ggtitle("Random Forest – Log-Loss Across Tuning Grid")
+```
+
+
+
+###### Side-by-side comparison plot (best vs best)
+
+```{r}
+comparison_table %>%
+  ggplot(aes(x = Model, y = LogLoss, fill = Model)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = round(LogLoss, 3)), vjust = -0.2, size = 5) +
+  labs(
+    title = "Model Comparison: Log-Loss on Test Set",
+    y = "Log-Loss",
+    x = ""
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+Based on the log-loss result above, the classification tree performed better than the random forest on the test set. The test-set log-loss values were approximately 2.3 for the decision tree and 2.4 for the random forest, indicating that the tree produced better-tuned probability predictions for predicting diabetes in the dataset.
+
